@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auditoría de Seguridad IA — SabaTech</title>
+<meta name="description" content="Auditoría de seguridad para sistemas de IA y agentes autónomos: OWASP Agentic Apps Top 10, EU AI Act y NIST AI RMF. Informe ejecutivo, hallazgos por severidad y plan de remediación.">
+<style>
+:root {
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #101018;
+  --bg-card: #15151f;
+  --text-primary: #fafafa;
+  --text-secondary: #a1a1aa;
+  --accent: #8b5cf6;
+  --accent-soft: #7c3aed;
+  --cyan: #22d3ee;
+  --green: #22c55e;
+  --yellow: #eab308;
+  --blue: #3b82f6;
+  --red: #ef4444;
+  --border: #26263a;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+.container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(10,10,15,0.9);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+nav .container { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+.logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.05rem; text-decoration: none; color: var(--text-primary); }
+.logo svg { width: 28px; height: 28px; }
+nav .links { display: flex; gap: 24px; }
+nav .links a { color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; transition: color .2s; }
+nav .links a:hover { color: var(--text-primary); }
+.btn {
+  display: inline-block; padding: 12px 28px; border-radius: 10px;
+  background: var(--accent); color: #fff; font-weight: 600; text-decoration: none;
+  transition: background .2s, transform .2s;
+}
+.btn:hover { background: var(--accent-soft); transform: translateY(-2px); }
+.btn-outline {
+  background: transparent; border: 1px solid var(--border); color: var(--text-primary);
+}
+.btn-outline:hover { border-color: var(--accent); background: rgba(139,92,246,0.08); }
+
+header {
+  padding: 150px 0 90px;
+  background: radial-gradient(ellipse at top, rgba(139,92,246,0.12), transparent 60%);
+  text-align: center;
+}
+.badge {
+  display: inline-block; padding: 6px 16px; border-radius: 999px;
+  border: 1px solid var(--accent); color: var(--accent);
+  font-size: 0.8rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
+  margin-bottom: 28px;
+}
+h1 { font-size: clamp(2.2rem, 5vw, 3.4rem); line-height: 1.15; margin-bottom: 22px; }
+h1 .grad {
+  background: linear-gradient(90deg, var(--accent), var(--cyan));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+header p.lead { color: var(--text-secondary); font-size: 1.15rem; max-width: 720px; margin: 0 auto 36px; }
+header .cta { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+
+section { padding: 80px 0; border-top: 1px solid var(--border); }
+section h2 { font-size: 2rem; margin-bottom: 12px; text-align: center; }
+section .section-sub { color: var(--text-secondary); text-align: center; max-width: 680px; margin: 0 auto 48px; }
+
+.grid { display: grid; gap: 20px; }
+.grid-3 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.grid-2 { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+
+.card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px;
+  padding: 28px; transition: border-color .2s, transform .2s;
+}
+.card:hover { border-color: var(--accent); transform: translateY(-3px); }
+.card .icon { font-size: 1.8rem; margin-bottom: 14px; display: block; }
+.card h3 { font-size: 1.1rem; margin-bottom: 10px; }
+.card p { color: var(--text-secondary); font-size: 0.92rem; }
+
+.frameworks { display: flex; flex-direction: column; gap: 14px; }
+.framework {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px;
+  padding: 26px; display: flex; gap: 20px; align-items: flex-start;
+}
+.framework .f-icon {
+  min-width: 52px; height: 52px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem; background: rgba(139,92,246,0.12); border: 1px solid rgba(139,92,246,0.3);
+}
+.framework h3 { font-size: 1.1rem; margin-bottom: 6px; }
+.framework p { color: var(--text-secondary); font-size: 0.92rem; }
+.tag {
+  display: inline-block; margin: 6px 6px 0 0; padding: 3px 12px; border-radius: 999px;
+  background: rgba(34,211,238,0.08); border: 1px solid rgba(34,211,238,0.25);
+  color: var(--cyan); font-size: 0.75rem; font-weight: 600;
+}
+
+.severity { display: flex; flex-direction: column; gap: 12px; margin-top: 18px; }
+.sev-row { display: flex; align-items: center; gap: 12px; font-size: 0.88rem; }
+.sev-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.sev-bar { flex: 1; height: 8px; border-radius: 999px; background: var(--bg-secondary); overflow: hidden; }
+.sev-fill { height: 100%; border-radius: 999px; }
+.mock-report {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 28px;
+}
+.mock-report h3 { font-size: 1.05rem; margin-bottom: 4px; }
+.mock-report .mono { font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.75rem; color: var(--text-secondary); }
+
+.process { counter-reset: step; }
+.step {
+  position: relative; background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 28px 28px 28px 84px; margin-bottom: 16px;
+}
+.step::before {
+  counter-increment: step; content: counter(step);
+  position: absolute; left: 24px; top: 24px;
+  width: 40px; height: 40px; border-radius: 10px;
+  background: rgba(139,92,246,0.12); border: 1px solid rgba(139,92,246,0.4);
+  color: var(--accent); font-weight: 700; font-size: 1.1rem;
+  display: flex; align-items: center; justify-content: center;
+}
+.step h3 { font-size: 1.05rem; margin-bottom: 6px; }
+.step p { color: var(--text-secondary); font-size: 0.92rem; }
+
+.value-props li {
+  list-style: none; display: flex; gap: 12px; align-items: flex-start;
+  color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 14px;
+}
+.value-props li strong { color: var(--text-primary); }
+.check { color: var(--green); flex-shrink: 0; }
+
+.cta-section { text-align: center; background: radial-gradient(ellipse at bottom, rgba(34,211,238,0.08), transparent 60%); }
+.cta-section h2 { margin-bottom: 14px; }
+.cta-section p { color: var(--text-secondary); max-width: 600px; margin: 0 auto 32px; }
+
+footer { border-top: 1px solid var(--border); padding: 32px 0; text-align: center; color: var(--text-secondary); font-size: 0.85rem; }
+@media (max-width: 720px) {
+  nav .links { display: none; }
+  header { padding-top: 110px; }
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <a class="logo" href="#">
+      <svg viewBox="0 0 32 32" fill="none">
+        <path d="M16 2L28 8v8c0 7.5-5.1 12.4-12 14C9.1 28.4 4 23.5 4 16V8l12-6z" stroke="#8b5cf6" stroke-width="2.5" fill="rgba(139,92,246,0.12)"/>
+        <path d="M11 16.5l3.5 3.5L21 13" stroke="#22d3ee" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      SabaTech <span style="color:var(--accent)">Security</span>
+    </a>
+    <div class="links">
+      <a href="#alcance">Qué evaluamos</a>
+      <a href="#entregables">Entregables</a>
+      <a href="#metodologia">Metodología</a>
+      <a href="#valor">Por qué SabaTech</a>
+    </div>
+    <a href="https://sabatech.dev/contact" class="btn" style="padding:9px 20px;font-size:.88rem;">Solicitar auditoría</a>
+  </div>
+</nav>
+
+<header>
+  <div class="container">
+    <span class="badge">Servicio profesional</span>
+    <h1>Auditoría de Seguridad para<br><span class="grad">Sistemas de IA y Agentes Autónomos</span></h1>
+    <p class="lead">
+      Protegemos las aplicaciones agénticas de tu organización: evaluamos vulnerabilidades específicas de IA,
+      verificamos el cumplimiento del EU AI Act y aplicamos el marco NIST AI RMF, con un informe accionable
+      y plan de remediación priorizado.
+    </p>
+    <div class="cta">
+      <a href="https://sabatech.dev/contact" class="btn">Solicitar propuesta</a>
+      <a href="#alcance" class="btn btn-outline">Ver alcance</a>
+    </div>
+  </div>
+</header>
+
+<section id="alcance">
+  <div class="container">
+    <h2>Qué evaluamos</h2>
+    <p class="section-sub">
+      Un enfoque específico para sistemas de IA: las amenazas de las aplicaciones agénticas no se cubren
+      con un pentest tradicional.
+    </p>
+    <div class="frameworks">
+      <div class="framework">
+        <div class="f-icon">🤖</div>
+        <div>
+          <h3>OWASP Agentic Applications Top 10</h3>
+          <p>Evaluación de las vulnerabilidades más críticas en aplicaciones agénticas y de IA:</p>
+          <span class="tag">Prompt injection</span>
+          <span class="tag">Tool abuse</span>
+          <span class="tag">Identity spoofing</span>
+          <span class="tag">Fuga de datos por LLM</span>
+          <span class="tag">Memory poisoning</span>
+          <span class="tag">Escalada de privilegios</span>
+          <span class="tag">Supply chain de modelos</span>
+        </div>
+      </div>
+      <div class="framework">
+        <div class="f-icon">🇪🇺</div>
+        <div>
+          <h3>EU AI Act — Cumplimiento normativo</h3>
+          <p>Análisis de la clasificación de riesgo de tus sistemas de IA y verificación de las
+          obligaciones aplicables antes de que los plazos de la regulación te alcancen.</p>
+          <span class="tag">Clasificación de riesgo</span>
+          <span class="tag">Transparencia</span>
+          <span class="tag">Gobernanza de datos</span>
+          <span class="tag">Supervisión humana</span>
+        </div>
+      </div>
+      <div class="framework">
+        <div class="f-icon">📏</div>
+        <div>
+          <h3>NIST AI RMF</h3>
+          <p>Evaluación madura y estructurada del ciclo de vida de tus sistemas de IA bajo el
+          Risk Management Framework del NIST: del gobierno a la monitorización continua.</p>
+          <span class="tag">Govern</span>
+          <span class="tag">Map</span>
+          <span class="tag">Measure</span>
+          <span class="tag">Manage</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="entregables">
+  <div class="container">
+    <h2>Qué recibe el cliente</h2>
+    <p class="section-sub">
+      Entregables claros y accionables, pensados tanto para dirección como para equipos técnicos.
+    </p>
+    <div class="grid grid-2">
+      <div class="card">
+        <span class="icon">📋</span>
+        <h3>Informe ejecutivo + técnico</h3>
+        <p>Dos vistas del mismo resultado: una para decidir y otra para ejecutar. Resumen de riesgo de negocio y detalle técnico con evidencias.</p>
+        <div class="severity">
+          <div class="sev-row"><span class="sev-dot" style="background:var(--red)"></span> Crítica <div class="sev-bar"><div class="sev-fill" style="width:85%;background:var(--red)"></div></div></div>
+          <div class="sev-row"><span class="sev-dot" style="background:var(--yellow)"></span> Alta <div class="sev-bar"><div class="sev-fill" style="width:60%;background:var(--yellow)"></div></div></div>
+          <div class="sev-row"><span class="sev-dot" style="background:var(--blue)"></span> Media <div class="sev-bar"><div class="sev-fill" style="width:40%;background:var(--blue)"></div></div></div>
+          <div class="sev-row"><span class="sev-dot" style="background:var(--green)"></span> Baja <div class="sev-bar"><div class="sev-fill" style="width:25%;background:var(--green)"></div></div></div>
+        </div>
+        <p class="mono" style="margin-top:8px">Ejemplo ilustrativo — datos de demo, no reales</p>
+      </div>
+      <div class="card">
+        <span class="icon">🛠️</span>
+        <h3>Plan de remediación priorizado</h3>
+        <p>Cada hallazgo incluye severidad, impacto de negocio, recomendación concreta y esfuerzo estimado, ordenado por prioridad.</p>
+      </div>
+      <div class="card">
+        <span class="icon">🔁</span>
+        <h3>Re-test de verificación</h3>
+        <p>Tras aplicar las correcciones, verificamos que las vulnerabilidades quedan efectivamente cerradas y emitimos un informe de re-test.</p>
+      </div>
+      <div class="card">
+        <span class="icon">🧭</span>
+        <h3>Hoja de ruta de cumplimiento</h3>
+        <p>Posicionamiento frente al EU AI Act y NIST AI RMF, con próximos pasos realistas para reducir riesgo regulatorio y técnico.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="metodologia">
+  <div class="container">
+    <h2>Cómo lo hacemos</h2>
+    <p class="section-sub">
+      Motor técnico propio combinado con revisión experta. Automatización donde aporta velocidad,
+      criterio humano donde importa.
+    </p>
+    <div class="process">
+      <div class="step">
+        <h3>Alcance y reconocimiento</h3>
+        <p>Definimos el perímetro de los sistemas de IA y agentes a auditar, sus superficies de exposición y el modelo de amenazas aplicable.</p>
+      </div>
+      <div class="step">
+        <h3>Escaneo automatizado</h3>
+        <p>Ejecutamos nuestro motor QA-FRAMEWORK: security testing basado en OWASP, análisis SAST de código y auditoría de dependencias sobre los componentes del sistema.</p>
+      </div>
+      <div class="step">
+        <h3>Revisión experta</h3>
+        <p>Analistas validan y explotan de forma controlada los hallazgos automatizados, reducen falsos positivos y detectan vulnerabilidades que solo el criterio humano encuentra.</p>
+      </div>
+      <div class="step">
+        <h3>Informe y remediación</h3>
+        <p>Entregamos el informe con hallazgos por severidad y plan de remediación, y acompañamos al equipo técnico durante la corrección.</p>
+      </div>
+      <div class="step">
+        <h3>Re-test y cierre</h3>
+        <p>Verificamos las correcciones, emitimos el informe de re-test y dejamos recomendaciones de monitorización continua.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="valor">
+  <div class="container">
+    <h2>Por qué SabaTech</h2>
+    <p class="section-sub">
+      Ayudamos a las empresas que adoptan IA a hacerlo con seguridad y cumplimiento desde el diseño.
+    </p>
+    <div class="grid grid-2">
+      <div class="card">
+        <ul class="value-props">
+          <li><span class="check">✓</span><span><strong>Especialización agéntica:</strong> conocemos de primera mano los sistemas multi-agente, porque los construimos.</span></li>
+          <li><span class="check">✓</span><span><strong>Motor propio:</strong> QA-FRAMEWORK con metodología OWASP, SAST y auditoría de dependencias, más capacidades OSINT para evaluar la superficie expuesta.</span></li>
+          <li><span class="check">✓</span><span><strong>Cumplimiento y seguridad juntos:</strong> no tratamos el EU AI Act como un formulario, sino como parte del riesgo técnico real.</span></li>
+        </ul>
+      </div>
+      <div class="card">
+        <ul class="value-props">
+          <li><span class="check">✓</span><span><strong>Hallazgos accionables:</strong> sin informes de 200 páginas que nadie lee; prioridad, impacto y fix concreto.</span></li>
+          <li><span class="check">✓</span><span><strong>Re-test incluido:</strong> el trabajo termina cuando las vulnerabilidades están cerradas, no cuando entregamos el PDF.</span></li>
+          <li><span class="check">✓</span><span><strong>Confidencialidad:</strong> ejecución bajo acuerdo de confidencialidad, sin exfiltrar información de tu infraestructura.</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-section">
+  <div class="container">
+    <h2>¿Desplegando IA en tu organización?</h2>
+    <p>Hablemos antes de que lo haga un atacante. Te enviamos una propuesta de alcance sin compromiso.</p>
+    <a href="https://sabatech.dev/contact" class="btn">Solicitar auditoría de seguridad</a>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    © 2026 SabaTech — POC demostrativo. Todos los datos mostrados son simulados: sin hostnames, puertos, IPs ni capturas de infraestructura real.
+  </div>
+</footer>
+
+</body>
+</html>
